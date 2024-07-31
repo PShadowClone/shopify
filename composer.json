@@ -1,0 +1,17 @@
+{
+    "name": "amr/shopify",
+    "require": {
+        "guzzlehttp/guzzle": "8.0.x-dev"
+    },
+    "autoload": {
+        "psr-4": {
+            "Amr\\Shopify\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Amr Saidam"
+        }
+    ],
+    "minimum-stability": "dev"
+}
