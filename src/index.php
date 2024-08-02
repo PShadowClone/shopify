@@ -73,6 +73,8 @@ $products = fetchProducts($client);
  */
 echo 'Total Products: ' . count($products)  . "<br/>";
 
+file_put_contents('storage/fetched_products.json' , '');
+
 /**
  * convert the fetched products to Product object
  */
