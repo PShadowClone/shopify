@@ -11,6 +11,11 @@ $client = new Client([
     'verify' => false   // Disable SSL verification just for development purpose
 ]);
 
+/**
+ * fetch the products from the given store
+ * @param $client
+ * @return array
+ */
 function fetchProducts($client) {
     $endpoint = 'products.json';
     $products = [];
@@ -33,6 +38,11 @@ function fetchProducts($client) {
     return $products;
 }
 
+/**
+ * fetch the products per page
+ * @param $response
+ * @return mixed|null
+ */
 function getNextPageInfo($response) {
     $header = $response->getHeader('Link');
     if (isset($header[0]) && preg_match('/<([^>]+)>; rel="next"/', $header[0], $matches)) {
@@ -42,10 +52,40 @@ function getNextPageInfo($response) {
     return null;
 }
 
+function fetchLocations($client) {
+    $endpoint = 'locations.json';
+    $response = $client->get($endpoint);
+    $data = json_decode($response->getBody()->getContents(), true);
+
+    return $data['locations'] ?? [];
+}
+
+
+$location = fetchLocations($client);
+
+/**
+ * method calling
+ */
 $products = fetchProducts($client);
 
+/**
+ * count of the fetched products
+ */
 echo 'Total Products: ' . count($products)  . "<br/>";
 
+/**
+ * convert the fetched products to Product object
+ */
+$collection = [];
 foreach ($products as $product) {
+    $newProduct = new \Amr\Shopify\Models\Product();
+    $newProduct->fill($product , CLEAN_OBJECT);
+    $newProduct->setTitle('-nullable');
+    $collection[] = $newProduct->getData();
+    $newProduct->updateInventoryLevel($client ,$location[0]['id'], 50);
     echo 'Product ID: ' . $product['id'] . ', Title: ' . $product['title'] . "<br/>";
 }
+/**
+ * save the fetched and cleaned object in the fetched_products.json file, so you can easily check the null values
+ */
+file_put_contents('storage/fetched_products.json' , json_encode($collection) , FILE_APPEND);

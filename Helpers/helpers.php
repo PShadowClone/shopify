@@ -1,6 +1,13 @@
 <?php
+define('CLEAN_OBJECT' , true);
 
 if (!function_exists('read_csv')) {
+    /**
+     * read data from the csv file
+     * @param $path
+     * @param $model
+     * @return array
+     */
     function read_csv($path , $model)
     {
         $collection = [];
@@ -31,6 +38,13 @@ if (!function_exists('read_csv')) {
 }
 
 if(!function_exists('get_attr')){
+    /**
+     * manage the getting values from the passed array
+     * @param $arr
+     * @param $key
+     * @param $default
+     * @return mixed|null
+     */
     function get_attr($arr , $key , $default = null){
         return isset($arr[$key]) ? $arr[$key] : $default;
     }

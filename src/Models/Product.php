@@ -9,7 +9,7 @@ class Product extends BaseModel
     protected $fillable= [
         "Handle",
         "Title",
-        "Body (HTML)",
+        "Body HTML",
         "Vendor",
         "Type",
         "Tags",
@@ -24,8 +24,15 @@ class Product extends BaseModel
         "Cost per item"
     ];
 
+    /**
+     * set options values
+     * @param $options
+     * @return array
+     */
     public function setOptions($options)
     {
+        if(isset($options['options']))
+            return $options['options'];
         $data = [];
         for ($index = 1 ; $index < 5; $index++){
             if(get_attr($options, "option{$index}_value") == '')
@@ -37,12 +44,28 @@ class Product extends BaseModel
         }
         return $data;
     }
+
+    public function setTitle($title){
+        if(is_array($title))
+            return $title['title'];
+        $this->data['title'] .=  $this->data['title'].$title;
+      return $this->data['title'];
+    }
+
+    /**
+     * set variants values
+     * @param $variants
+     * @return array[]
+     */
     public function setVariants($variants){
+        if(isset($variants['variants']))
+            return $variants['variants'];
         return  [
            [
                'sku' =>  get_attr($variants ,"variant_sku" ),
                'grams' =>  get_attr($variants ,"variant_grams" ),
                'inventory_quantity' =>  get_attr($variants ,"variant_inventory_qty" ),
+               'inventory_management' => 'shopify', // to enable quantity tracking
                'inventory_policy' => get_attr($variants ,"variant_inventory_policy" ),
                'fulfillment_service' => get_attr($variants ,"variant_fulfillment_service" ),
                'price' => get_attr($variants ,"variant_price" ),
@@ -59,7 +82,15 @@ class Product extends BaseModel
            ]
         ];
     }
+
+    /**
+     * set images values
+     * @param $images
+     * @return array[]
+     */
     public function setImages($images){
+        if(isset($images['images']))
+            return $images['images'];
         return [
                 [
                     'src' => get_attr($images ,"image_src" ),
@@ -69,7 +100,14 @@ class Product extends BaseModel
         ];
     }
 
+    /**
+     * set google shopping values
+     * @param $googleShipping
+     * @return array
+     */
     public function setGoogle_shopping($googleShipping){
+        if(isset($googleShipping['google_shopping']))
+            return $googleShipping['google_shopping'];
         $keys  = [
             "google_shopping_/_google_product_category",
             "google_shopping_/_gender",
@@ -92,6 +130,41 @@ class Product extends BaseModel
         }
        return $data;
 
+    }
+
+    /**
+     * update all qty of items
+     * @param $client
+     * @param $locationId
+     * @param $available
+     * @return string|void
+     */
+    function updateInventoryLevel($client,$locationId, $available) {
+
+        $endpoint = "inventory_levels/set.json";
+        if (!$this->variants || sizeof($this->variants) ==0){
+            return;
+        }
+       foreach ( $this->variants as $variant){
+           if(!isset($variant['inventory_item_id'])){
+               continue;
+           }
+           $inventory_item_id = $variant['inventory_item_id'];
+           echo $inventory_item_id."<br/>";
+           try{
+               $response = $client->post($endpoint, [
+                   'json' => [
+                       'location_id' => $locationId,
+                       'inventory_item_id' => $inventory_item_id,
+                       'available' => $available
+                   ]
+               ]);
+           }catch (\Exception $exception){
+
+           }
+
+       }
+       return "Update qty with {$available}";
     }
 
 
